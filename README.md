@@ -1,140 +1,139 @@
-# PDF Token Classification System
+# Token Analysis and Visualization
 
-A modular system for extracting and classifying tokens from PDF documents using OpenAI's GPT-4.1 model, with automated validation capabilities.
+This project analyzes PDF documents for different types of tokens (mathematical, software-related, machine learning-related, etc.) and creates visualizations comparing the token distributions across documents.
 
-## Project Structure
+## Files Overview
 
-```
-pdf_classification/
-├── main.py                 # Main entry point and orchestration
-├── pdf_processor.py        # PDF text extraction functionality
-├── token_classifier.py     # Token categorization logic
-├── api_client.py          # OpenAI API interaction
-├── validation.py          # Validation and metrics calculation
-├── utils.py               # Utility functions (timer)
-├── requirements.txt       # Project dependencies
-└── README.md             # This file
-```
+1. **`Analysis_updated.py`** - Core analysis engine that extracts and classifies tokens from PDF files
+2. **`token_visualization.py`** - Creates bar charts comparing token percentages across documents
+3. **`run_token_analysis.py`** - Main script that orchestrates the analysis and visualization
+4. **`README.md`** - This documentation file
 
-## Features
+## Requirements
 
-- Extract tokens from PDF files
-- Classify tokens into categories:
-  - Mathematical terms
-  - Software-related terms
-  - Machine learning/AI/hardware terms
-  - Stop words
-  - Numeric characters
-  - Other terms
-- Automated validation with precision, recall, and F1 scores
-- Random sampling for manual validation
-- Modular architecture for easy maintenance
-
-## Installation
-
-1. Install dependencies:
+### Python Libraries
 ```bash
-pip install -r requirements.txt
+pip install PyPDF2 scikit-learn openai matplotlib numpy tenacity
 ```
 
-2. Set up your OpenAI API key:
+### OpenAI API Key
+You need an OpenAI API key to classify tokens. Set it as an environment variable:
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-## Usage
+Or modify the code to include your API key directly (not recommended for production).
 
-### Basic Usage
+## Quick Start
 
-```python
-from main import main
-
-# Process a PDF and classify tokens
-results = main("path/to/your/document.pdf", pdf_fraction=1.0)
+### 1. Basic Usage
+```bash
+python run_token_analysis.py --pdfs "path/to/your/document.pdf"
 ```
 
-### With Validation
-
-```python
-# Process PDF and run validation
-results = main(
-    "path/to/your/document.pdf", 
-    pdf_fraction=1.0, 
-    run_validation=True, 
-    sample_size=500
-)
+### 2. Analyze Multiple PDFs
+```bash
+python run_token_analysis.py --pdfs "doc1.pdf" "doc2.pdf" "doc3.pdf"
 ```
 
-### Module Usage
-
-Each module can be used independently:
-
-```python
-# Extract tokens from PDF
-from pdf_processor import extract_tokens_from_pdf
-tokens = extract_tokens_from_pdf("document.pdf")
-
-# Classify tokens
-from token_classifier import classify_words
-classified = classify_words(tokens)
-
-# Run validation
-from validation import validate_classification
-validate_classification(results)
+### 3. Analyze a Fraction of Each Document
+```bash
+python run_token_analysis.py --pdfs "large_document.pdf" --fraction 0.1
 ```
 
-## Modules
+### 4. List Example PDFs
+```bash
+python run_token_analysis.py --list-example-pdfs
+```
 
-### `pdf_processor.py`
-- Extracts text tokens from PDF files
-- Supports processing a fraction of the document
-- Handles multi-page documents
+## Command Line Options
 
-### `token_classifier.py`
-- Splits tokens into initial categories (numeric, stop words, to-classify)
-- Uses OpenAI API to classify remaining tokens
-- Handles batch processing for efficiency
+- `--pdfs` - List of PDF files to analyze
+- `--fraction` - Fraction of each PDF to analyze (0.0-1.0, default: 1.0)
+- `--output-chart` - Output filename for chart (default: token_comparison_chart.png)
+- `--output-json` - Output filename for JSON results (default: token_analysis_results.json)
+- `--load-existing` - Load existing JSON results instead of analyzing PDFs
+- `--no-chart` - Skip creating the chart
+- `--list-example-pdfs` - List example PDF paths
 
-### `api_client.py`
-- Manages OpenAI API communication
-- Implements retry logic for reliability
-- Provides example-based classification prompts
+## Output Files
 
-### `validation.py`
-- Selects random samples for manual validation
-- Generates JSON files for manual labeling
-- Calculates precision, recall, and F1 scores
-- Provides formatted metric summaries
+1. **JSON Results** - Detailed token counts for each document
+   - Format: `token_analysis_results_YYYYMMDD_HHMMSS.json`
 
-### `utils.py`
-- Contains utility functions like the timer context manager
+2. **Visualization Chart** - Bar chart comparing token percentages
+   - Format: `token_comparison_chart_YYYYMMDD_HHMMSS.png`
 
-### `main.py`
-- Orchestrates the entire pipeline
-- Provides CLI interface
-- Handles configuration and error management
+## Token Categories
 
-## Validation Process
+The analysis classifies tokens into the following categories:
 
-1. Random samples are selected from each category
-2. A JSON file is generated for manual labeling
-3. After manual labeling, metrics are automatically calculated
-4. Results include precision, recall, and F1 scores for each category
+1. **Mathematical** - Mathematical terms, equations, statistical concepts
+2. **Software** - Programming languages, frameworks, development tools
+3. **Machine-related** - AI/ML terms, hardware, neural networks
+4. **Stop words** - Common words (the, and, of, etc.)
+5. **Numbers and characters** - Numeric values and special characters
 
-## Configuration
+## Examples
 
-Key parameters in `main.py`:
-- `pdf_path`: Path to the PDF file
-- `fraction`: Portion of PDF to process (0.0 to 1.0)
-- `run_validation`: Whether to perform validation
-- `sample_size`: Number of tokens to validate per category
+### Example 1: Analyze Two ML Papers
+```bash
+python run_token_analysis.py --pdfs \
+  "C:/Downloads/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf" \
+  "C:/Downloads/A Few Useful Things to Know About Machine Learning.pdf"
+```
 
-## Error Handling
+### Example 2: Quick Analysis (10% of each document)
+```bash
+python run_token_analysis.py --pdfs "large_paper.pdf" --fraction 0.1
+```
 
-- Robust API error handling with retry logic
-- Comprehensive logging throughout the system
-- Graceful fallbacks for classification failures
+### Example 3: Load Existing Results and Recreate Chart
+```bash
+python run_token_analysis.py --load-existing --output-json "token_analysis_results_20240101_120000.json"
+```
+
+## Customization
+
+### Modifying Token Classification
+
+Edit the `classify_words_batch()` function in `Analysis_updated.py` to change how tokens are classified. The function uses OpenAI's GPT model to classify words based on examples.
+
+### Customizing Visualization
+
+Modify `create_token_comparison_chart()` in `token_visualization.py` to change:
+- Chart colors
+- Figure size
+- Caption generation
+- Additional metrics
+
+## Troubleshooting
+
+### Common Issues
+
+1. **OpenAI API Errors**
+   - Ensure your API key is set correctly
+   - Check your OpenAI account has sufficient credits
+   - The script uses GPT-4 by default - ensure you have access
+
+2. **PDF Reading Errors**
+   - Some PDFs may be image-based and cannot be processed
+   - Ensure PDFs are not password-protected
+
+3. **Memory Issues**
+   - For large PDFs, use the `--fraction` parameter to process a subset
+   - The script processes tokens in batches to manage memory
+
+### Debug Mode
+Enable debug logging by modifying the logging level in any of the scripts:
+```python
+logging.basicConfig(level=logging.DEBUG)
+```
 
 ## License
 
-MIT License
+This project is for educational purposes. Ensure you have the right to analyze the PDFs you process.
+
+## Contact
+
+For issues or questions, please check the logs for detailed error messages and troubleshooting information.
